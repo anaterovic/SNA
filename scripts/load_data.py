@@ -18,10 +18,11 @@ def load_postings(path="../input/"):
     return postings
 
 
-def get_middle_day(df):
-    time_span = df["first_contact"].max() - df["first_contact"].min()
+def get_middle_day(date_series):
+    date_series = date_series.dt.date
+    time_span = date_series.max() - date_series.min()
     half_time_span = time_span/2
-    middle = (df["first_contact"].min() + half_time_span)
+    middle = (date_series.min() + half_time_span)
     return middle
 
 def _apply_bidirectionality(df, on="VoteCreatedAt"):
@@ -85,16 +86,28 @@ def get_first_contact_df(votes, postings, interaction_type):
 
 
     
-def subset_users(votes, postings, num_days_min=20, filter_middle_interval="both", middle=None):
+def subset_users(votes, postings, num_days_min=None, interaction_type=None):
+    """Subset users based on the number of days they interacted with the community and only keep users that are involved in a
+    first contact with someone in the middle day of the interval
+
+    Args:
+        votes (_type_): votes df
+        postings (_type_): votes df
+        num_days_min (_type_, optional): Number of days a user has to have posted in the interval. Defaults to None.
+        interaction_type (_type_, optional): If set, filter users that interacted in the middle of the interval. We can define the type of interaction (votes, replies, both). Defaults to None.
+
+    Returns:
+        _type_: a dataframe of users with shape (n_users, )
+    """
+    subset_days_interacted, selected_users_middle = None, None
     if num_days_min:
         subset_days_interacted = _subset_min_interaction(votes, postings, num_days_min)
-    if filter_middle_interval:
-        first_contact = get_first_contact_df(votes, postings, filter_middle_interval)
-        middle = middle or get_middle_day(first_contact)
-        first_contact_filtered = first_contact[first_contact["first_contact"] == middle][["UserCommunityName_x", "UserCommunityName_y", "first_contact"]]
+    if interaction_type:
+        first_contact = get_first_contact_df(votes, postings, interaction_type)
+        middle = middle or get_middle_day(first_contact["first_contact"])
+        first_contact_filtered = first_contact[first_contact["first_contact"].dt.date == middle][["UserCommunityName_x", "UserCommunityName_y", "first_contact"]]
         selected_users_middle = pd.concat([first_contact_filtered["UserCommunityName_x"], first_contact_filtered["UserCommunityName_y"]]).drop_duplicates() # middle interval subset
-    
-    if num_days_min and filter_middle_interval:
+    if num_days_min and interaction_type:
         return selected_users_middle[selected_users_middle.isin(subset_days_interacted)]
     
-    return selected_users_middle or  subset_days_interacted
+    return selected_users_middle or subset_days_interacted
