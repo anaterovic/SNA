@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 def load_votes(path="../input/"):
@@ -15,3 +16,85 @@ def load_postings(path="../input/"):
     postings = pd.concat([postings_1, postings_2]).astype({"PostingCreatedAt": "datetime64"})
     print("Postings loaded")
     return postings
+
+
+def get_middle_day(df):
+    time_span = df["first_contact"].max() - df["first_contact"].min()
+    half_time_span = time_span/2
+    middle = (df["first_contact"].min() + half_time_span)
+    return middle
+
+def _apply_bidirectionality(df, on="VoteCreatedAt"):
+    """Here we account for bidirectionality of the contact pairs. The problem is that if user A comments user B's post,
+     but user B previously commented user A's post we have 2 rows with (eventually) different dates. We take the minimum and leciographycally sort the usernames for enabling joining"""
+    inv_df = (df.merge(df, left_on=["UserCommunityName_x", "UserCommunityName_y"], right_on=["UserCommunityName_y", "UserCommunityName_x"], suffixes=("", "_inv"), how="left"))
+    inv_df[[f"{on}_inv",f"{on}"]] = inv_df[[f"{on}_inv",f"{on}"]].fillna(pd.to_datetime("2050-01-01", format="%Y-%m-%d").date())
+    inv_df[f"{on}_bidirectional"] = inv_df[[f"{on}_inv",on]].min(axis=1)
+    inv_df[["UserCommunityName_x", "UserCommunityName_y"]] = np.sort(inv_df[["UserCommunityName_x", "UserCommunityName_y"]], axis=1)
+    return inv_df[["UserCommunityName_x", "UserCommunityName_y", f"{on}_bidirectional"]].drop_duplicates()
+
+def _subset_min_interaction(votes, postings, num_days_min):
+    v = votes[["UserCommunityName","VoteCreatedAt"]].rename(columns={"VoteCreatedAt":"CreatedAt"})
+    p = postings[["UserCommunityName", "PostingCreatedAt"]].rename(columns={"PostingCreatedAt":"CreatedAt"})
+
+    num_days_interacted = pd.concat([v,p]).groupby(["UserCommunityName","CreatedAt"]).size().reset_index()\
+                    .groupby("UserCommunityName").size().reset_index()
+
+    user_subset_days_interacted = num_days_interacted[num_days_interacted[0] >= num_days_min].UserCommunityName.unique()
+    return user_subset_days_interacted
+
+def get_first_contact_df(votes, postings, interaction_type):
+    # Find u-u tuples with their first date of interaction by vote
+    first_contact_vote_pairs = (votes[["UserCommunityName", "UserCreatedAt", "ID_Posting", "VoteCreatedAt"]]
+    .merge(postings[["ID_Posting", "UserCommunityName", "UserCreatedAt"]], on=["ID_Posting"], how="left")
+    [["UserCommunityName_x", "UserCommunityName_y", "VoteCreatedAt"]]
+    .sort_values("VoteCreatedAt")
+    .groupby(["UserCommunityName_x", "UserCommunityName_y"])
+    .first()
+    .reset_index())
+    
+    first_contact_vote_pairs_bd = _apply_bidirectionality(first_contact_vote_pairs, "VoteCreatedAt")
+    
+    if interaction_type == "votes":
+        first_contact_vote_pairs_bd["first_contact"] = first_contact_vote_pairs_bd["VoteCreatedAt_bidirectional"]
+        return first_contact_vote_pairs_bd
+    
+    # find u-u tuples with their first date of interaction by reply
+    first_contact_reply_pairs = (postings.dropna(subset=["ID_Posting_Parent"])[
+    ["UserCommunityName", "ID_Posting_Parent", "PostingCreatedAt"]]
+    .merge(postings[["ID_Posting", "UserCommunityName"]], left_on=["ID_Posting_Parent"], right_on=["ID_Posting"], how="left")
+    [["UserCommunityName_x", "UserCommunityName_y", "PostingCreatedAt"]]
+    .sort_values("PostingCreatedAt")
+    .groupby(["UserCommunityName_x", "UserCommunityName_y"])
+    .first()
+    .reset_index())
+    
+    first_contact_reply_pairs_bd = _apply_bidirectionality(first_contact_reply_pairs, "PostingCreatedAt")
+    if interaction_type == "votes":
+        first_contact_reply_pairs["first_contact"] = first_contact_reply_pairs["PostingCreatedAt_bidirectional"]
+        return first_contact_reply_pairs
+    
+    
+    # If we want to consider both, we take the minimum of the two
+    fist_contact = (first_contact_reply_pairs_bd.merge(first_contact_vote_pairs_bd, on=["UserCommunityName_x", "UserCommunityName_y"], how="outer")
+    .fillna(pd.to_datetime("2050-01-01", format="%Y-%m-%d").date())) # We set a date in the future to avoid problems with the min function
+    fist_contact["first_contact"] = fist_contact[[
+    "PostingCreatedAt_bidirectional", "VoteCreatedAt_bidirectional"]].min(axis=1)
+    return fist_contact
+
+
+
+    
+def subset_users(votes, postings, num_days_min=20, filter_middle_interval="both", middle=None):
+    if num_days_min:
+        subset_days_interacted = _subset_min_interaction(votes, postings, num_days_min)
+    if filter_middle_interval:
+        first_contact = get_first_contact_df(votes, postings, filter_middle_interval)
+        middle = middle or get_middle_day(first_contact)
+        first_contact_filtered = first_contact[first_contact["first_contact"] == middle][["UserCommunityName_x", "UserCommunityName_y", "first_contact"]]
+        selected_users_middle = pd.concat([first_contact_filtered["UserCommunityName_x"], first_contact_filtered["UserCommunityName_y"]]).drop_duplicates() # middle interval subset
+    
+    if num_days_min and filter_middle_interval:
+        return selected_users_middle[selected_users_middle.isin(subset_days_interacted)]
+    
+    return selected_users_middle or  subset_days_interacted
