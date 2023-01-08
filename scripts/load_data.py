@@ -42,7 +42,9 @@ def _subset_min_interaction(votes, postings, num_days_min, interaction_type):
         df=[v]
     if interaction_type == "postings":
         df=[p]
-    num_days_interacted = pd.concat(df).groupby(["UserCommunityName","CreatedAt"]).size().reset_index()\
+        
+    full_df = pd.concat(df)
+    num_days_interacted = full_df.groupby(["UserCommunityName",full_df.CreatedAt.dt.day]).size().reset_index()\
                     .groupby("UserCommunityName").size().reset_index()
 
     user_subset_days_interacted = num_days_interacted[num_days_interacted[0] >= num_days_min].UserCommunityName.unique()
@@ -59,7 +61,6 @@ def get_first_contact_df(votes, postings, interaction_type):
     .reset_index())
     
     first_contact_vote_pairs_bd = _apply_bidirectionality(first_contact_vote_pairs, "VoteCreatedAt")
-    
     if interaction_type == "votes":
         first_contact_vote_pairs_bd["first_contact"] = first_contact_vote_pairs_bd["VoteCreatedAt_bidirectional"]
         return first_contact_vote_pairs_bd
@@ -75,9 +76,9 @@ def get_first_contact_df(votes, postings, interaction_type):
     .reset_index())
     
     first_contact_reply_pairs_bd = _apply_bidirectionality(first_contact_reply_pairs, "PostingCreatedAt")
-    if interaction_type == "votes":
-        first_contact_reply_pairs["first_contact"] = first_contact_reply_pairs["PostingCreatedAt_bidirectional"]
-        return first_contact_reply_pairs
+    if interaction_type == "replies":
+        first_contact_reply_pairs_bd["first_contact"] = first_contact_reply_pairs_bd["PostingCreatedAt_bidirectional"]
+        return first_contact_reply_pairs_bd
     
     
     # If we want to consider both, we take the minimum of the two
@@ -96,7 +97,7 @@ def subset_users(votes, postings, interaction_type, num_days_min=None, firt_inte
 
     Args:
         votes (_type_): votes df
-        postings (_type_): votes df
+        postings (_type_): postings df
         num_days_min (_type_, optional): Number of days a user has to have posted in the interval. Defaults to None.
         interaction_type (_type_, optional): If set, filter users that interacted in the middle of the interval. We can define the type of interaction (votes, replies, both). Defaults to None.
 
@@ -111,7 +112,12 @@ def subset_users(votes, postings, interaction_type, num_days_min=None, firt_inte
         middle = get_middle_day(first_contact["first_contact"])
         first_contact_filtered = first_contact[first_contact["first_contact"].dt.date == middle][["UserCommunityName_x", "UserCommunityName_y", "first_contact"]]
         selected_users_middle = pd.concat([first_contact_filtered["UserCommunityName_x"], first_contact_filtered["UserCommunityName_y"]]).drop_duplicates() # middle interval subset
+
+        first_contact_export = (first_contact_filtered[["UserCommunityName_x", "UserCommunityName_y"]]
+                            .assign(UserCommunityName_x=lambda x: "user_" + x.UserCommunityName_x)
+                            .assign(UserCommunityName_y=lambda x: "user_" + x.UserCommunityName_y))
+                        
     if num_days_min and firt_interaction_middle:
-        return selected_users_middle[selected_users_middle.isin(subset_days_interacted)]
+        return selected_users_middle[selected_users_middle.isin(subset_days_interacted)], first_contact_export
     
-    return selected_users_middle or subset_days_interacted
+    return selected_users_middle or subset_days_interacted, first_contact_export
