@@ -113,6 +113,9 @@ def subset_users(votes, postings, interaction_type, num_days_min=None, firt_inte
         first_contact_filtered = first_contact[first_contact["first_contact"].dt.date == middle][["UserCommunityName_x", "UserCommunityName_y", "first_contact"]]
         selected_users_middle = pd.concat([first_contact_filtered["UserCommunityName_x"], first_contact_filtered["UserCommunityName_y"]]).drop_duplicates() # middle interval subset
 
+        first_contact_filtered[["UserCommunityName_x", "UserCommunityName_y"]].to_csv(
+            f'uu_tuples/uu_first_contact_tuples_{interaction_type}.csv', index=False)
+
         first_contact_export = (first_contact_filtered[["UserCommunityName_x", "UserCommunityName_y"]]
                             .assign(UserCommunityName_x=lambda x: "user_" + x.UserCommunityName_x)
                             .assign(UserCommunityName_y=lambda x: "user_" + x.UserCommunityName_y))
