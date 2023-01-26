@@ -19,16 +19,16 @@ Our project code is written in Python 3 in the form of .ipynb Jupyter Notebook f
 Some code which could be reused or was uninteresting for the analysis was outsourced in the `scripts` folder in order to keep the notebooks clean.
 
 ## Data analysis 
-To be found in **/scripts/data_analysis.ipynb**. Run notebook in order to reproduce.
+To be found in **/scripts/data_analysis.ipynb**. This notebook documents our data exploration process and influenced the following decisions we took to investigate homophily. Run notebook in order to reproduce.
 
 ## Similarity Functions and Article Similarity
-To be found in **similarity_functions_and_article_similarity.ipynb**. Run notebook in order to reproduce.
+To be found in **similarity_functions_and_article_similarity.ipynb**. This code documents the similarity computation and was used during development. It incorporates data subsetting, graph creation and projection and the first visualization of the change in similarity. It was kept due to documentation purposes. Run notebook in order to reproduce.
 
 ## Weighted Similarity and Votes Similarity
-To be found in **weighted_and_votes_similarity.ipynb**. Run notebook in order to reproduce.
+To be found in **weighted_and_votes_similarity.ipynb**. It covers vote-similarity (users are similar if they vote similarily) and a weighted approach for article-ressort similarity. Run notebook in order to reproduce.
 
 ## Graph analysis
-To be found in **graph_analysis.ipynb**. Run notebook in order to reproduce.
+To be found in **graph_analysis.ipynb**. It covers all variations of similarity scores and offers a good comparison. Run notebook in order to reproduce.
 
 ## Text Similarities
 This section is more thorough because it requires multiple steps to reproduce.
