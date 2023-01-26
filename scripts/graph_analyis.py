@@ -1,13 +1,16 @@
 import itertools
-import pandas as pd
+
 import networkx as nx
 import numpy as np
+import pandas as pd
 
 # Author: @peterwalchofer
 
 
 
 def create_graph(df, article_or_ressort, user="UserCommunityName"):
+    """Create a bipartite graph from a dataframe with columns article_or_ressort and user. This is used to map the data of a specific time frame
+    into a graph structure in order to compute the similarity between users."""
     graph = nx.Graph()
     graph.add_nodes_from(df[article_or_ressort].unique())
     graph.add_nodes_from(df[user].unique())
@@ -18,6 +21,9 @@ def create_graph(df, article_or_ressort, user="UserCommunityName"):
 
 
 def compute_overlap(graph, df, article_or_ressort, verbose=False):
+    """Compute the overlap between users. This is done by iterating over all articles and 
+    computing the overlap between all users that commented on the article. This essentially
+    produces a projection of the bipartite graph in order to have user-user metrics."""
     uu_overlap = {}
     article_ids = df[article_or_ressort].unique()
     for idx, article in enumerate(article_ids):
@@ -37,15 +43,18 @@ def compute_overlap(graph, df, article_or_ressort, verbose=False):
 
 
 def user_lookup_df(df, article_or_ressort):
+    """ Make dict of users and the number of articles they commented on. Used for computing the 
+    denominator of the jaccard coefficient.
+    """
     user_num_articles = df[["UserCommunityName", article_or_ressort]].drop_duplicates()\
         .groupby(["UserCommunityName"]).size().to_frame()
-    # make dict of users and the number of articles they commented on
     user_num_articles = dict(
         zip(user_num_articles.index, user_num_articles[0]))
     return user_num_articles
 
 
 def compute_similarity(uu_overlap, user_num_articles, chunckIdx):
+    """Computes jaccard similarity for each user pair."""
     similarities = []
     for uu_tuple in uu_overlap.keys():
         overlap = uu_overlap[uu_tuple]
@@ -59,6 +68,7 @@ def compute_similarity(uu_overlap, user_num_articles, chunckIdx):
 
 
 def compute_time_base_similiarities(selected_postings, article_or_ressort, uu_first_contact_tuples, num_chunks=30):
+    """Performs a time-based split of the interval and computes the similarities for each user pair."""
     sum_sims = 0
     n = 0
     chunks = []
