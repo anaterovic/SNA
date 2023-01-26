@@ -1,2 +1,14 @@
-# Setup
-Place CSVs from [here](https://sna22w.jupyter.hpc.tuwien.ac.at) in the `/input` directory and run `notebook.ipnyb`
+# Data analysis 
+/scripts/scripts_explain.ipynb
+
+# Similarity Functions and Article Similarity
+notebook.ipynb
+
+# Weighted Similarity and Votes Similarity
+notebook_ana.ipynb
+
+# Graph analysis
+wikipedia_analysis.ipynb
+
+# Text Similarity
+/text_similarity
