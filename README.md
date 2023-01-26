@@ -1,10 +1,22 @@
 # Setup
-Place CSVs from [here](https://sna22w.jupyter.hpc.tuwien.ac.at) in the `/input` directory and run `notebook.ipnyb`
+## Data 
+Place CSVs from [here](https://sna22w.jupyter.hpc.tuwien.ac.at) in the `/input`.
+
+## Dependencies
+Install `requirements.txt` with pip: 
+```
+pip install -r requirements.txt
+```
+or with anaconda: 
+```
+conda install --file requirements.txt
+```
 
 # Running the code
 Our group project code consists of various approaches related to how to measure similarities for our project's purposes. The following walks you through how to run the code to be found in this repository.
 
 Our project code is written in Python 3 in the form of .ipynb Jupyter Notebook files and .py plain text Python script files.
+Some code which could be reused or was uninteresting for the analysis was outsourced in the `scripts` folder in order to keep the notebooks clean.
 
 ## Data analysis 
 To be found in **/scripts/data_analysis.ipynb**. Run notebook in order to reproduce.
