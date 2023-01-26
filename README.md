@@ -5,7 +5,7 @@
 notebook.ipynb
 
 # Weighted Similarity and Votes Similarity
-notebook_ana.ipynb
+weighted_and_votes_similarity.ipynb
 
 # Graph analysis
 wikipedia_analysis.ipynb
