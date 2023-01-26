@@ -108,6 +108,7 @@ dependencies:
     - jupyter-core==5.0.0
     - matplotlib-inline==0.1.6
     - nest-asyncio==1.5.6
+    - nltk==3.7
     - parso==0.8.3
     - pexpect==4.8.0
     - pickleshare==0.7.5
@@ -119,6 +120,7 @@ dependencies:
     - pygments==2.13.0
     - pyqt5-sip==12.11.0
     - pyzmq==24.0.1
+    - scikit-learn==1.1.3
     - stack-data==0.6.0
     - traitlets==5.5.0
     - wcwidth==0.2.5
