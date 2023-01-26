@@ -1,14 +1,14 @@
 # Data analysis 
-/scripts/scripts_explain.ipynb
+/scripts/data_analysis.ipynb
 
 # Similarity Functions and Article Similarity
-notebook.ipynb
+similarity_functions_and_article_similarity.ipynb
 
 # Weighted Similarity and Votes Similarity
 weighted_and_votes_similarity.ipynb
 
 # Graph analysis
-wikipedia_analysis.ipynb
+graph_analysis.ipynb
 
 # Text Similarity
 /text_similarity
