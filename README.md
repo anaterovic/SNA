@@ -1,3 +1,7 @@
+#Homophiliy and Assortative Mixing
+Attributes of homophily and social influence were being investigated using graphs
+on a social network dataset.
+
 # Setup
 ## Data 
 Place CSVs from [here](https://sna22w.jupyter.hpc.tuwien.ac.at) in the `/input`.
