@@ -1,4 +1,4 @@
-#Homophiliy and Assortative Mixing
+# Homophiliy and Assortative Mixing
 Attributes of homophily and social influence were being investigated using graphs
 on a social network dataset.
 
